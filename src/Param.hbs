@@ -1,0 +1,299 @@
+﻿Ext.define('{{APP_NS}}.Param', {
+
+  scopeId: null,
+  scopeType: null,
+  field: null,
+  as: null,
+  record: null,
+  value: undefined,
+  defaultValue: undefined,
+  isParam: null,
+
+
+  constructor: function (config)
+  {
+    if (config)
+    {
+      this.scopeId = config.scopeId;
+      this.scopeType = config.scopeType;
+      this.field = config.field;
+      this.as = config.as || config.field;
+      this.record = config.record;
+      this.value = config.value;
+      this.defaultValue = config.value;
+      this.isParam = true;
+    };
+  },
+
+
+  compute: function ()
+  {
+    var t = this;
+    var scope = null;
+    var ret = undefined;
+    if ({{APP_VAR}} && {{APP_VAR}}.CTRL)
+    {
+      var ctrl = {{APP_VAR}}.CTRL;
+      var view = {{APP_VAR}}.VIEW;
+
+      switch (t.scopeType)
+      {
+
+        case 'form':
+          scope = view.query('#' + t.scopeId)[0];
+          if (scope)
+          {
+            ret = LogX.Forms.GetFormInputValue(scope.query('#' + t.field)[0]);
+          };
+          break;
+
+        case 'grid':
+          scope = view.query('grid[itemId=' + t.scopeId + ']')[0];
+          if (scope && scope.getSelectionModel())
+          {
+            if (t.record == null || t.record == undefined)
+            {
+              var selected = scope.getSelectionModel().getSelection()[0];
+              ret = selected ? selected.get(t.field) : -1;
+            }
+            else
+              if (!isNaN(parseInt(t.record)))
+              {
+                var foundRecord = scope.getStore().getAt(t.record);
+                ret = foundRecord ? foundRecord.get(t.field) : -1;
+              };
+          };
+          break;
+
+        case 'tree':
+          scope = view.query('CommonTree[itemId=' + t.scopeId + ']')[0];
+          if (scope && scope.getSelectionModel())
+          {
+            if (t.record == null || t.record == undefined)
+            {
+              var selected = scope.getSelectionModel().getSelection()[0];
+              ret = selected ? selected.get(t.field) : -1;
+            }
+            else
+              if (!isNaN(parseInt(t.record)))
+              {
+                var foundRecord = scope.getStore().getAt(t.record);
+                ret = foundRecord ? foundRecord.get(t.field) : -1;
+              };
+          };
+          break;
+
+        case 'dialogform':
+          if ({{APP_VAR}}.currDialog != {})
+          {
+            var form = {{APP_VAR}}.currDialog.SimpleForm;
+            if (form)
+            {
+              scope = form;
+              ret = form.GetInputValue(form.query('#' + t.field)[0]);
+            };
+          };
+          break;
+
+        case 'dialoggrid':
+          if ({{APP_VAR}}.currDialog != {})
+          {
+            var wind = {{APP_VAR}}.currDialog;
+            scope = ctrl.FindGrid(t.scopeId);
+            if (scope && scope.getSelectionModel())
+            {
+              if (t.record == null || t.record == undefined)
+              {
+                var selected = scope.getSelectionModel().getSelection()[0];
+                ret = selected ? selected.get(t.field) || selected.raw[t.field] : -1;
+              }
+              else
+                if (!isNaN(parseInt(t.record)))
+                {
+                  var foundRecord = scope.getStore().getAt(t.record);
+                  ret = foundRecord ? foundRecord.get(t.field) || foundRecord.raw[t.field] : -1;
+                };
+            };
+          };
+          break;
+
+        case 'combo':
+          var found = view.query('combobox[itemId=' + t.scopeId + ']')[0];
+          if (found)
+          {
+            switch (t.field)
+            {
+              case 'descrField':
+                ret = found.getDescriptionValue();
+                break;
+
+              case 'displayField':
+                ret = found.getDisplayValue();
+                break;
+
+              case 'valueField':
+              case 'value':
+                ret = found.getValue();
+                break;
+
+              default:
+                ret = found.lastSelection.map(function (m)
+                {
+                  return m.data[t.field]
+                });
+                break;
+            };
+          };
+          break;
+
+        case 'list':
+          var found = view.query('CommonList[itemId=' + t.scopeId + ']')[0];
+          if (found)
+          {
+            switch (t.field)
+            {
+              case 'descrValue':
+                ret = ctrl.FindProp({ itemId: t.scopeId, from: 'list', name: 'descrValue' });
+                break;
+
+              case 'displayValue':
+                ret = ctrl.FindProp({ itemId: t.scopeId, from: 'list', name: 'displayValue' });
+                break;
+
+              case 'secondaryValue':
+                ret = ctrl.FindProp({ itemId: t.scopeId, from: 'list', name: 'secondaryValue' });
+                break;
+
+              case 'iconValue':
+                ret = ctrl.FindProp({ itemId: t.scopeId, from: 'list', name: 'iconValue' });
+                break;
+
+              case 'colorValue':
+                ret = ctrl.FindProp({ itemId: t.scopeId, from: 'list', name: 'colorValue' });
+                break;
+
+              case 'value':
+                ret = ctrl.FindProp({ itemId: t.scopeId, from: 'list', name: 'value' });
+                break;
+
+              default:
+                ret = found.HasSelection() ? found.getSelectionModel().getSelection()[0].data[t.field] : null;
+                break;
+            };
+          };
+          break;
+
+        case 'auth':
+          ret = Ext.util.Cookies.get('SessionID');
+          break;
+
+        case 'input':
+          var qrypart = '[itemId=' + t.scopeId + ']';
+          var qry = 'field' + qrypart + ', DateSet' + qrypart + ', NumberSet' + qrypart + ', MonthField' + qrypart;
+          var found = view.query(qry)[0];
+          if (found)
+          {
+            if (t.field)
+            {
+              switch (t.field)
+              {
+                case 'descrField':
+                  ret = found.getDescriptionValue();
+                  break;
+
+                case 'displayField':
+                  ret = found.getDisplayValue();
+                  break;
+
+                case 'valueField':
+                case 'value':
+                  ret = found.getValue();
+                  break;
+
+                default:
+                  ret = found.lastSelection.map(function (m)
+                  {
+                    return m.data[t.field]
+                  });
+                  break;
+              };
+            }
+            else
+            {
+              ret = found.getValue();
+            };            
+          };
+          break;
+
+        case 'editor':
+          var found = ctrl.FindEditor(t.scopeId);
+          if (found)
+          {
+            ret = found.GetEditorText();
+          };
+          break;
+
+        case 'variable':
+          ret = ctrl.EvalVariable({
+            id: t.scopeId,
+            prop: t.field,
+            index: t.record
+          });
+          break;
+
+
+        case 'tree':
+          var tree = Ext.WindowManager.front.Tree;
+          ret = tree ? tree.getSelectionModel().getSelection()[0].get(t.field) : null;
+          break;
+
+
+        default:
+          break;
+      };
+    };
+    if (t.defaultValue == undefined)
+    {
+      t.value = ret;
+    }
+    else
+    {
+      t.value = t.defaultValue;
+    };
+  },
+
+
+  getIsParam: function ()
+  {
+    var t = this;
+    return t.isInstance;
+  },
+
+
+  setIsParam: function (value)
+  {
+    var t = this;
+    t.isParam = t.isInstance;
+  },
+
+
+  Compute: function ()
+  {
+    this.compute();
+  },
+
+
+  IsEqualTo: function (other)
+  {
+    var me = this;
+    if (me.isParam && other && other.isParam)
+    {
+      var result = true;
+      result &= me.scopeId === other.scopeId;
+      result &= me.scopeType === other.scopeType;
+      result &= me.field === other.field;
+      result &= me.as === other.as;
+      return result;
+    };
+  }
+});

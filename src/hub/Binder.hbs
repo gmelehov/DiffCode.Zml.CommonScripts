@@ -1,0 +1,33 @@
+﻿
+Ext.define('{{APP_NS}}.hub.Binder', {
+
+  serverMethod: null,
+  clientEvent: null,
+  hubKey: null,
+  noRequest: false,
+  ready: false,
+
+  constructor: function (config)
+  {
+    var me = this;
+    config = config || {};
+
+    me.serverMethod = config.serverMethod;
+    me.clientEvent = config.clientEvent;
+    me.noRequest = config.noRequest;
+    me.hubKey = config.hubKey;
+    me.command = config.command;
+    me.callback = config.callback;
+  },
+
+
+  command: null,
+  callback: null,
+
+
+  isHubBinder: function ()
+  {
+    return true;
+  }
+
+});
